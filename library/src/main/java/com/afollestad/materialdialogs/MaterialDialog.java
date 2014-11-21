@@ -42,7 +42,6 @@ import java.util.List;
  */
 public class MaterialDialog extends DialogBase implements View.OnClickListener, MeasureCallbackScrollView.Callback {
 
-    private Context mContext;
     private ImageView icon;
     private TextView title;
     private View titleFrame;
@@ -73,7 +72,11 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
     private boolean autoDismiss;
 
     MaterialDialog(Builder builder) {
-        super(new ContextThemeWrapper(builder.context, builder.theme == Theme.LIGHT ? R.style.MD_Light : R.style.MD_Dark));
+        super(builder.context, builder.theme == Theme.LIGHT ? R.style.MD_Light : R.style.MD_Dark);
+
+        if (builder.theme == Theme.LIGHT && Build.VERSION.SDK_INT <= Build.VERSION_CODES.GINGERBREAD_MR1) {
+            setInverseBackgroundForced(true);
+        }
 
         this.regularFont = builder.regularFont;
         if (this.regularFont == null)
@@ -82,7 +85,6 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
         if (this.mediumFont == null)
             this.mediumFont = Typeface.createFromAsset(getContext().getResources().getAssets(), "Roboto-Medium.ttf");
 
-        this.mContext = builder.context;
         this.view = LayoutInflater.from(getContext()).inflate(R.layout.md_dialog, null);
         if (builder.customViewId != 0) {
             // Inflate custom view with themed context
@@ -265,7 +267,7 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
         LinearLayout customFrame = (LinearLayout) view.findViewById(R.id.customViewFrame);
         ((ScrollView) view.findViewById(R.id.customViewScroll)).smoothScrollTo(0, 0);
         setMargin(customFrame, -1, -1, 0, 0);
-        LayoutInflater li = LayoutInflater.from(mContext);
+        LayoutInflater li = LayoutInflater.from(getContext());
 
         final int customFramePadding = (int) getContext().getResources().getDimension(R.dimen.md_title_margin_plainlist);
         int listPaddingBottom;
