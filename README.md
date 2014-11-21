@@ -1,4 +1,10 @@
-# Material Dialogs
+# AndroIRC fork
+
+This fork brings back support for Gingerbread theming the original author does not want.
+
+# Original README
+
+## Material Dialogs
 
 The code you see below is also found in the sample project. You can download a APK of the sample here: https://github.com/afollestad/material-dialogs/blob/master/sample/sample.apk. The sample's also available on Google Play: https://play.google.com/store/apps/details?id=com.afollestad.materialdialogssample.
 

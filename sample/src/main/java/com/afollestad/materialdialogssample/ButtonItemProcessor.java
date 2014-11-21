@@ -6,7 +6,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.afollestad.materialdialogs.list.ItemProcessor;
+import com.androirc.materialdialogs.list.ItemProcessor;
 
 /**
  * @author Aidan Follestad (afollestad)

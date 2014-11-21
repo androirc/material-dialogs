@@ -1,4 +1,4 @@
-package com.afollestad.materialdialogs;
+package com.androirc.materialdialogs;
 
 import android.content.Context;
 import android.content.res.TypedArray;

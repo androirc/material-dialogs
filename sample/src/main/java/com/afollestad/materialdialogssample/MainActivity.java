@@ -15,10 +15,10 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.afollestad.materialdialogs.Alignment;
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
-import com.afollestad.materialdialogs.Theme;
+import com.androirc.materialdialogs.Alignment;
+import com.androirc.materialdialogs.DialogAction;
+import com.androirc.materialdialogs.MaterialDialog;
+import com.androirc.materialdialogs.Theme;
 
 /**
  * @author Aidan Follestad (afollestad)

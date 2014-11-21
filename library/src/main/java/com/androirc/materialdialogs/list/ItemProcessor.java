@@ -1,4 +1,4 @@
-package com.afollestad.materialdialogs.list;
+package com.androirc.materialdialogs.list;
 
 import android.content.Context;
 import android.view.LayoutInflater;

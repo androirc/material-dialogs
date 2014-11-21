@@ -1,4 +1,4 @@
-package com.afollestad.materialdialogs;
+package com.androirc.materialdialogs;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -17,7 +17,6 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.text.method.LinkMovementMethod;
-import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,9 +28,10 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.afollestad.materialdialogs.base.DialogBase;
-import com.afollestad.materialdialogs.list.ItemProcessor;
-import com.afollestad.materialdialogs.views.MeasureCallbackScrollView;
+import com.afollestad.materialdialogs.R;
+import com.androirc.materialdialogs.base.DialogBase;
+import com.androirc.materialdialogs.list.ItemProcessor;
+import com.androirc.materialdialogs.views.MeasureCallbackScrollView;
 
 import java.util.ArrayList;
 import java.util.Arrays;

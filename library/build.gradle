@@ -6,7 +6,7 @@ android {
     buildToolsVersion "21.1.1"
 
     defaultConfig {
-        applicationId "com.afollestad.materialdialogs"
+        applicationId "com.androirc.materialdialogs"
         minSdkVersion 9
         targetSdkVersion 21
         versionCode 1

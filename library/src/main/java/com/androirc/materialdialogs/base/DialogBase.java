@@ -1,4 +1,4 @@
-package com.afollestad.materialdialogs.base;
+package com.androirc.materialdialogs.base;
 
 import android.app.AlertDialog;
 import android.content.Context;

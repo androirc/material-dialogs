@@ -1,4 +1,4 @@
-package com.afollestad.materialdialogs;
+package com.androirc.materialdialogs;
 
 /**
  * @author Aidan Follestad (afollestad)

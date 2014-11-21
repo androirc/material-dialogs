@@ -1,4 +1,4 @@
-package com.afollestad.materialdialogs.views;
+package com.androirc.materialdialogs.views;
 
 import android.content.Context;
 import android.util.AttributeSet;
