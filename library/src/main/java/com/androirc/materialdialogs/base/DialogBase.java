@@ -43,7 +43,7 @@ public class DialogBase extends AlertDialog implements DialogInterface.OnShowLis
     }
 
     /**
-     * @deprecated Use getActionButton(com.afollestad.materialdialogs.DialogAction)} instead.
+     * @deprecated Use getActionButton(com.androirc.materialdialogs.DialogAction)} instead.
      */
     @Override
     public Button getButton(int whichButton) {

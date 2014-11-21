@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-apply plugin: 'bintray-release'
+apply plugin: 'android-maven'
 
 android {
     compileSdkVersion 21
@@ -10,13 +10,7 @@ android {
         minSdkVersion 9
         targetSdkVersion 21
         versionCode 1
-        versionName "0.2.1"
-    }
-    buildTypes {
-        release {
-//            runProguard false
-//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
+        versionName "0.2.2"
     }
     lintOptions {
         abortOnError false
@@ -24,18 +18,19 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:21.+'
     compile 'com.android.support:support-annotations:21.+'
 }
 
-publish {
-    userOrg = 'drummer-aidan'
-    groupId = 'com.afollestad'
-    artifactId = 'material-dialogs'
-    version = '0.2.1'
-    description = 'A library for implementing Material design styled dialogs across all versions of Android.'
-    website = 'https://github.com/afollestad/material-dialogs'
-    issueTracker = "${website}/issues"
-    repository = "${website}.git"
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: "http://nexus.madalynn.eu/nexus/content/repositories/releases/") {
+                authentication(userName: username, password: password)
+            }
+            pom.version = "0.2.2"
+            pom.artifactId = "materialdialogs"
+            pom.groupId = "com.androirc"
+        }
+    }
 }

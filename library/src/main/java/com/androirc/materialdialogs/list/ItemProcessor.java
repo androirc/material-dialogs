@@ -4,7 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 
-import com.afollestad.materialdialogs.R;
+import com.androirc.materialdialogs.R;
 
 /**
  * @author Aidan Follestad (afollestad)

@@ -28,7 +28,7 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.afollestad.materialdialogs.R;
+import com.androirc.materialdialogs.R;
 import com.androirc.materialdialogs.base.DialogBase;
 import com.androirc.materialdialogs.list.ItemProcessor;
 import com.androirc.materialdialogs.views.MeasureCallbackScrollView;
