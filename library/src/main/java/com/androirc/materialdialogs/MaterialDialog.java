@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.ColorStateList;
-import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Paint;
 import android.graphics.Typeface;
@@ -20,6 +19,8 @@ import android.text.method.LinkMovementMethod;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -28,7 +29,6 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.androirc.materialdialogs.R;
 import com.androirc.materialdialogs.base.DialogBase;
 import com.androirc.materialdialogs.list.ItemProcessor;
 import com.androirc.materialdialogs.views.MeasureCallbackScrollView;
@@ -70,6 +70,7 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
     private Typeface regularFont;
     private ItemProcessor mItemProcessor;
     private boolean autoDismiss;
+    private boolean wrapInScrollView;
 
     MaterialDialog(Builder builder) {
         super(builder.context, builder.theme == Theme.LIGHT ? R.style.MD_Light : R.style.MD_Dark);
@@ -86,12 +87,6 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
             this.mediumFont = Typeface.createFromAsset(getContext().getResources().getAssets(), "Roboto-Medium.ttf");
 
         this.view = LayoutInflater.from(getContext()).inflate(R.layout.md_dialog, null);
-        if (builder.customViewId != 0) {
-            // Inflate custom view with themed context
-            this.customView = LayoutInflater.from(getContext()).inflate(builder.customViewId, null);
-        } else {
-            this.customView = builder.customView;
-        }
         this.callback = builder.callback;
         this.listCallback = builder.listCallback;
         this.listCallbackSingle = builder.listCallbackSingle;
@@ -108,37 +103,54 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
         this.selectedIndices = builder.selectedIndicies;
         this.mItemProcessor = builder.itemProcessor;
         this.autoDismiss = builder.autoDismiss;
+        this.wrapInScrollView = items != null && items.length > 0;
 
         title = (TextView) view.findViewById(R.id.title);
         icon = (ImageView) view.findViewById(R.id.icon);
         titleFrame = view.findViewById(R.id.titleFrame);
-        final TextView content = (TextView) view.findViewById(R.id.content);
 
-        content.setText(builder.content);
-        content.setMovementMethod(new LinkMovementMethod());
-        setTypeface(content, regularFont);
-        content.setTextColor(DialogUtils.resolveColor(getContext(), android.R.attr.textColorSecondary));
-        content.setLineSpacing(0f, builder.contentLineSpacingMultiplier);
-        if (this.positiveColor == 0) {
-            content.setLinkTextColor(DialogUtils.resolveColor(getContext(), android.R.attr.textColorPrimary));
+        ViewGroup parent = (ViewGroup) view.findViewById(R.id.mainFrame);
+        if (builder.customView == null && builder.customViewId == 0 && (items == null || items.length == 0)) {
+            // Inflate default content layout, and add it to the dialog
+            View defaultContent = LayoutInflater.from(getContext()).inflate(R.layout.md_default_content, parent, true);
+            this.wrapInScrollView = true;
+
+            final TextView content = (TextView) defaultContent.findViewById(R.id.content);
+
+            content.setText(builder.content);
+            content.setMovementMethod(new LinkMovementMethod());
+            setTypeface(content, regularFont);
+            content.setTextColor(DialogUtils.resolveColor(getContext(), android.R.attr.textColorSecondary));
+            content.setLineSpacing(0f, builder.contentLineSpacingMultiplier);
+            if (this.positiveColor == 0) {
+                content.setLinkTextColor(DialogUtils.resolveColor(getContext(), android.R.attr.textColorPrimary));
+            } else {
+                content.setLinkTextColor(this.positiveColor);
+            }
+            if (builder.contentAlignment == Alignment.CENTER) {
+                content.setGravity(Gravity.CENTER_HORIZONTAL);
+            } else if (builder.contentAlignment == Alignment.RIGHT) {
+                content.setGravity(Gravity.RIGHT);
+            }
         } else {
-            content.setLinkTextColor(this.positiveColor);
-        }
-        if (builder.contentAlignment == Alignment.CENTER) {
-            content.setGravity(Gravity.CENTER_HORIZONTAL);
-        } else if (builder.contentAlignment == Alignment.RIGHT) {
-            content.setGravity(Gravity.RIGHT);
+            if (items != null && items.length > 0) {
+                // Inflate list layout and add it to the main frame
+                LayoutInflater.from(getContext()).inflate(R.layout.md_list, parent, true);
+            } else {
+                if (wrapInScrollView) {
+                    parent = (ViewGroup) LayoutInflater.from(getContext()).inflate(R.layout.md_scrollview, parent, true);
+                }
+                if (builder.customViewId != 0) {
+                    // Inflate custom view with themed context and add it to the main frame
+                    this.customView = LayoutInflater.from(getContext()).inflate(builder.customViewId, parent, true);
+                } else if (builder.customView != null) {
+                    this.customView = builder.customView;
+                    parent.addView(customView);
+                }
+            }
         }
 
-        if (customView != null) {
-            title = (TextView) view.findViewById(R.id.titleCustomView);
-            icon = (ImageView) view.findViewById(R.id.iconCustomView);
-            titleFrame = view.findViewById(R.id.titleFrameCustomView);
-            invalidateCustomViewAssociations();
-            ((LinearLayout) view.findViewById(R.id.customViewFrame)).addView(customView);
-        } else {
-            invalidateCustomViewAssociations();
-        }
+        invalidateCustomViewAssociations();
 
         if (builder.icon != null) {
             icon.setVisibility(View.VISIBLE);
@@ -147,14 +159,9 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
             icon.setVisibility(View.GONE);
         }
 
-        if (items != null && items.length > 0)
-            title = (TextView) view.findViewById(R.id.titleCustomView);
-
         // Title is set after it's determined whether to use first title or custom view title
         if (builder.title == null || builder.title.toString().trim().isEmpty()) {
             titleFrame.setVisibility(View.GONE);
-            if (customView == null)
-                view.findViewById(R.id.titleFrameCustomView).setVisibility(View.GONE);
         } else {
             title.setText(builder.title);
             setTypeface(title, mediumFont);
@@ -185,55 +192,26 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
      * Invalidates visibility of views for the presence of a custom view or list content
      */
     private void invalidateCustomViewAssociations() {
-        if (customView != null || (items != null && items.length > 0)) {
-            view.findViewById(R.id.mainFrame).setVisibility(View.GONE);
-            view.findViewById(R.id.customViewScrollParent).setVisibility(View.VISIBLE);
-            if (!mMeasuredScrollView) {
-                // Wait until it's measured
-                ((MeasureCallbackScrollView) view.findViewById(R.id.customViewScroll)).setCallback(this);
-                return;
-            }
-            if (canCustomViewScroll()) {
-                view.findViewById(R.id.customViewDivider).setVisibility(View.VISIBLE);
-                view.findViewById(R.id.customViewDivider).setBackgroundColor(DialogUtils.resolveColor(getContext(), R.attr.md_divider));
-                setMargin(view.findViewById(R.id.buttonStackedFrame), -1, 0, -1, -1);
-                setMargin(view.findViewById(R.id.buttonDefaultFrame), -1, 0, -1, -1);
-                if (items != null && items.length > 0) {
-                    View customFrame = view.findViewById(R.id.customViewFrame);
-                    Resources r = getContext().getResources();
-                    int bottomPadding = view.findViewById(R.id.titleCustomView).getVisibility() == View.VISIBLE ?
-                            (int) r.getDimension(R.dimen.md_main_frame_margin) : (int) r.getDimension(R.dimen.md_dialog_frame_margin);
-                    customFrame.setPadding(customFrame.getPaddingLeft(), customFrame.getPaddingTop(),
-                            customFrame.getPaddingRight(), bottomPadding);
-                }
-            } else {
-                view.findViewById(R.id.customViewDivider).setVisibility(View.GONE);
-                final int bottomMargin = (int) getContext().getResources().getDimension(R.dimen.md_button_padding_frame_bottom);
-                setMargin(view.findViewById(R.id.buttonStackedFrame), -1, bottomMargin, -1, -1);
-                setMargin(view.findViewById(R.id.buttonDefaultFrame), -1, bottomMargin, -1, -1);
-            }
-        } else {
-            view.findViewById(R.id.mainFrame).setVisibility(View.VISIBLE);
-            view.findViewById(R.id.customViewScrollParent).setVisibility(View.GONE);
-            view.findViewById(R.id.customViewDivider).setVisibility(View.GONE);
-            if (!mMeasuredScrollView) {
-                // Wait until it's measured
-                ((MeasureCallbackScrollView) view.findViewById(R.id.contentScrollView)).setCallback(this);
-                return;
-            }
-            if (canContentScroll()) {
-                view.findViewById(R.id.customViewDivider).setVisibility(View.VISIBLE);
-                view.findViewById(R.id.customViewDivider).setBackgroundColor(DialogUtils.resolveColor(getContext(), R.attr.md_divider));
-                setMargin(view.findViewById(R.id.mainFrame), -1, 0, -1, -1);
-                setMargin(view.findViewById(R.id.buttonStackedFrame), -1, 0, -1, -1);
-                setMargin(view.findViewById(R.id.buttonDefaultFrame), -1, 0, -1, -1);
+        view.findViewById(R.id.divider).setVisibility(View.GONE);
+        if (wrapInScrollView && !mMeasuredScrollView) {
+            // Wait until it's measured
+            ((MeasureCallbackScrollView) view.findViewById(R.id.contentScrollView)).setCallback(this);
+            return;
+        }
+        if (canContentScroll() || canCustomViewScroll()) {
+            view.findViewById(R.id.divider).setVisibility(View.VISIBLE);
+            view.findViewById(R.id.divider).setBackgroundColor(DialogUtils.resolveColor(getContext(), R.attr.md_divider));
+            setMargin(view.findViewById(R.id.mainFrame), -1, 0, -1, -1);
+            setMargin(view.findViewById(R.id.buttonStackedFrame), -1, 0, -1, -1);
+            setMargin(view.findViewById(R.id.buttonDefaultFrame), -1, 0, -1, -1);
+            if (customView == null && (items == null || items.length == 0)) {
                 final int conPadding = (int) getContext().getResources().getDimension(R.dimen.md_main_frame_margin);
                 View con = view.findViewById(R.id.content);
                 con.setPadding(con.getPaddingLeft(), 0, con.getPaddingRight(), conPadding);
-            } else {
-                View con = view.findViewById(R.id.content);
-                con.setPadding(con.getPaddingLeft(), 0, con.getPaddingRight(), 0);
             }
+        } else if (customView == null && (items == null || items.length == 0)) {
+            View con = view.findViewById(R.id.content);
+            con.setPadding(con.getPaddingLeft(), 0, con.getPaddingRight(), 0);
         }
     }
 
@@ -243,7 +221,7 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
      */
     private void invalidateSingleChoice(int newSelection) {
         newSelection++;
-        final LinearLayout list = (LinearLayout) view.findViewById(R.id.customViewFrame);
+        final LinearLayout list = (LinearLayout) view.findViewById(R.id.mainFrame);
         for (int i = 1; i < list.getChildCount(); i++) {
             View v = list.getChildAt(i);
             @SuppressLint("WrongViewCast")
@@ -261,35 +239,17 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
     @SuppressLint("WrongViewCast")
     private void invalidateList() {
         if (items == null || items.length == 0) return;
-        view.findViewById(R.id.contentScrollView).setVisibility(View.GONE);
 
-        view.findViewById(R.id.customViewScrollParent).setVisibility(View.VISIBLE);
-        LinearLayout customFrame = (LinearLayout) view.findViewById(R.id.customViewFrame);
-        ((ScrollView) view.findViewById(R.id.customViewScroll)).smoothScrollTo(0, 0);
-        setMargin(customFrame, -1, -1, 0, 0);
+        clearMargins();
+
+        ViewGroup parent = (ViewGroup) view.findViewById(R.id.contentList);
         LayoutInflater li = LayoutInflater.from(getContext());
 
-        final int customFramePadding = (int) getContext().getResources().getDimension(R.dimen.md_title_margin_plainlist);
-        int listPaddingBottom;
-        View title = view.findViewById(R.id.titleCustomView);
-        if (title.getVisibility() == View.VISIBLE) {
-            title.setPadding(customFramePadding, title.getPaddingTop(), customFramePadding, title.getPaddingBottom());
-            listPaddingBottom = customFramePadding;
-        } else {
-            listPaddingBottom = (int) getContext().getResources().getDimension(R.dimen.md_main_frame_margin);
-        }
-        if (hasActionButtons()) listPaddingBottom = 0;
-        customFrame.setPadding(customFrame.getPaddingLeft(), customFrame.getPaddingTop(),
-                customFrame.getPaddingRight(), listPaddingBottom);
-
-        View titleFrame = (View) title.getParent();
-        customFrame.removeAllViews();
-        customFrame.addView(titleFrame);
         final int itemColor = DialogUtils.resolveColor(getContext(), android.R.attr.textColorSecondary);
         for (int index = 0; index < items.length; index++) {
             View il;
             if (listCallbackSingle != null) {
-                il = li.inflate(R.layout.md_listitem_singlechoice, null);
+                il = li.inflate(R.layout.md_listitem_singlechoice, parent, false);
                 if (selectedIndex > -1) {
                     RadioButton control = (RadioButton) il.findViewById(R.id.control);
                     if (selectedIndex == index) control.setChecked(true);
@@ -299,7 +259,7 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
                 tv.setTextColor(itemColor);
                 setTypeface(tv, regularFont);
             } else if (listCallbackMulti != null) {
-                il = li.inflate(R.layout.md_listitem_multichoice, null);
+                il = li.inflate(R.layout.md_listitem_multichoice, parent, false);
                 if (selectedIndices != null) {
                     if (Arrays.asList(selectedIndices).contains(index)) {
                         CheckBox control = (CheckBox) il.findViewById(R.id.control);
@@ -314,7 +274,7 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
                 if (mItemProcessor != null) {
                     il = mItemProcessor.inflateItem(index, items[index]);
                 } else {
-                    il = li.inflate(R.layout.md_listitem, null);
+                    il = li.inflate(R.layout.md_listitem, parent, false);
                     TextView tv = (TextView) il.findViewById(R.id.title);
                     tv.setText(items[index]);
                     tv.setTextColor(itemColor);
@@ -324,7 +284,7 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
             il.setTag(index + ":" + items[index]);
             il.setOnClickListener(this);
             setBackgroundCompat(il, DialogUtils.resolveDrawable(getContext(), R.attr.md_selector));
-            customFrame.addView(il);
+            parent.addView(il);
         }
     }
 
@@ -339,19 +299,59 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
         return (dialogWidth - sixteenDp - sixteenDp - eightDp) / 2;
     }
 
+    private void clearMargins() {
+        View frame = view.findViewById(R.id.mainFrame);
+        int dialogMarginBottom;
+        if (hasActionButtons()) {
+            // There are buttons. Bottom margin is 16dp
+            dialogMarginBottom = (int) getContext().getResources().getDimension(R.dimen.md_main_frame_margin);
+        } else {
+            // No button. Bottom margin is 8dp
+            dialogMarginBottom = (int) getContext().getResources().getDimension(R.dimen.md_button_padding_frame_bottom);
+        }
+
+        setMargin(frame, -1, dialogMarginBottom, 0, 0);
+
+        View titleFrame = view.findViewById(R.id.titleFrame);
+        int dialogMargin = (int) getContext().getResources().getDimension(R.dimen.md_dialog_frame_margin);
+        setMargin(titleFrame, -1, -1, dialogMargin, dialogMargin);
+    }
+
+    private boolean canScrollViewScroll(ViewGroup view) {
+        View child = view.getChildAt(0);
+        if (child != null) {
+            int childHeight = child.getHeight();
+            return view.getHeight() < childHeight + view.getPaddingTop() + view.getPaddingBottom();
+        }
+        return false;
+    }
+
     /**
      * Detects whether or not the custom view or list content can be scrolled.
      */
     private boolean canCustomViewScroll() {
-        final ScrollView scrollView = (ScrollView) view.findViewById(R.id.customViewScroll);
-        final int childHeight = view.findViewById(R.id.customViewFrame).getMeasuredHeight();
-        return scrollView.getMeasuredHeight() < childHeight;
+        if (customView == null)
+            return false;
+
+        if (wrapInScrollView) {
+            // The custom view is wrapped in a scrollview
+            return canScrollViewScroll((ViewGroup) view.findViewById(R.id.contentScrollView));
+        } else if (customView instanceof ScrollView) {
+            return canScrollViewScroll((ViewGroup) customView);
+        } else if (customView instanceof WebView) {
+            return ((WebView) customView).getContentHeight() > customView.getHeight();
+        }
+
+        return false;
     }
 
     /**
      * Detects whether or not the content TextView can be scrolled.
      */
     private boolean canContentScroll() {
+        if (! wrapInScrollView || customView != null || (items != null && items.length > 0))
+            return false;
+
         final ScrollView scrollView = (ScrollView) view.findViewById(R.id.contentScrollView);
         final int childHeight = view.findViewById(R.id.content).getMeasuredHeight();
         return scrollView.getMeasuredHeight() < childHeight;
@@ -457,7 +457,7 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
     }
 
     private void sendSingleChoiceCallback(View v) {
-        LinearLayout list = (LinearLayout) view.findViewById(R.id.customViewFrame);
+        LinearLayout list = (LinearLayout) view.findViewById(R.id.mainFrame);
         for (int i = 1; i < list.getChildCount(); i++) {
             View itemView = list.getChildAt(i);
             @SuppressLint("WrongViewCast")
@@ -472,7 +472,7 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
     private void sendMultichoiceCallback() {
         List<Integer> selectedIndices = new ArrayList<Integer>();
         List<CharSequence> selectedTitles = new ArrayList<CharSequence>();
-        LinearLayout list = (LinearLayout) view.findViewById(R.id.customViewFrame);
+        LinearLayout list = (LinearLayout) view.findViewById(R.id.mainFrame);
         for (int i = 1; i < list.getChildCount(); i++) {
             View itemView = list.getChildAt(i);
             @SuppressLint("WrongViewCast")
@@ -581,6 +581,7 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
         protected Typeface regularFont;
         protected Typeface mediumFont;
         protected Drawable icon;
+        protected boolean wrapInScrollView = true;
 
         public Builder(@NonNull Context context) {
             this.context = context;
@@ -706,6 +707,11 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
             this.listCallback = callback;
             this.listCallbackSingle = null;
             this.listCallbackMulti = null;
+            return this;
+        }
+
+        public Builder wrapInScrollView(boolean wrap) {
+            wrapInScrollView = wrap;
             return this;
         }
 

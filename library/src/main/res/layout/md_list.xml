@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.androirc.materialdialogs.views.MeasureCallbackScrollView
+    android:id="@+id/contentScrollView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <LinearLayout
+        android:id="@+id/contentList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+</com.androirc.materialdialogs.views.MeasureCallbackScrollView>
