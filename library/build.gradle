@@ -10,7 +10,7 @@ android {
         minSdkVersion 9
         targetSdkVersion 21
         versionCode 1
-        versionName "0.2.2"
+        versionName "0.2.3"
     }
     lintOptions {
         abortOnError false
@@ -28,7 +28,7 @@ uploadArchives {
             repository(url: "http://nexus.madalynn.eu/nexus/content/repositories/releases/") {
                 authentication(userName: username, password: password)
             }
-            pom.version = "0.2.2"
+            pom.version = "0.2.3"
             pom.artifactId = "materialdialogs"
             pom.groupId = "com.androirc"
         }
