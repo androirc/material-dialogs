@@ -20,6 +20,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.webkit.WebView;
 import android.widget.CheckBox;
 import android.widget.ImageView;
@@ -31,7 +32,6 @@ import android.widget.TextView;
 
 import com.androirc.materialdialogs.base.DialogBase;
 import com.androirc.materialdialogs.list.ItemProcessor;
-import com.androirc.materialdialogs.views.MeasureCallbackScrollView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,7 +40,7 @@ import java.util.List;
 /**
  * @author Aidan Follestad (afollestad)
  */
-public class MaterialDialog extends DialogBase implements View.OnClickListener, MeasureCallbackScrollView.Callback {
+public class MaterialDialog extends DialogBase implements View.OnClickListener {
 
     private ImageView icon;
     private TextView title;
@@ -65,7 +65,6 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
     private boolean isStacked;
     private int selectedIndex;
     private Integer[] selectedIndices;
-    private boolean mMeasuredScrollView;
     private Typeface mediumFont;
     private Typeface regularFont;
     private ItemProcessor mItemProcessor;
@@ -103,7 +102,7 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
         this.selectedIndices = builder.selectedIndicies;
         this.mItemProcessor = builder.itemProcessor;
         this.autoDismiss = builder.autoDismiss;
-        this.wrapInScrollView = items != null && items.length > 0;
+        this.wrapInScrollView = builder.wrapInScrollView || (items != null && items.length > 0);
 
         title = (TextView) view.findViewById(R.id.title);
         icon = (ImageView) view.findViewById(R.id.icon);
@@ -138,19 +137,38 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
                 LayoutInflater.from(getContext()).inflate(R.layout.md_list, parent, true);
             } else {
                 if (wrapInScrollView) {
-                    parent = (ViewGroup) LayoutInflater.from(getContext()).inflate(R.layout.md_scrollview, parent, true);
+                    ViewGroup mainParent = parent;
+                    parent = (ViewGroup) LayoutInflater.from(getContext()).inflate(R.layout.md_scrollview, parent, false);
+                    mainParent.addView(parent);
+
                 }
                 if (builder.customViewId != 0) {
                     // Inflate custom view with themed context and add it to the main frame
-                    this.customView = LayoutInflater.from(getContext()).inflate(builder.customViewId, parent, true);
+                    this.customView = LayoutInflater.from(getContext()).inflate(builder.customViewId, parent, false);
                 } else if (builder.customView != null) {
                     this.customView = builder.customView;
-                    parent.addView(customView);
                 }
+                parent.addView(this.customView);
+
+                customView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        if (customView.getHeight() > 0) {
+                            customView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                            invalidateCustomViewAssociations();
+                        }
+                    }
+                });
             }
         }
 
-        invalidateCustomViewAssociations();
+        view.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                view.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                invalidateCustomViewAssociations();
+            }
+        });
 
         if (builder.icon != null) {
             icon.setVisibility(View.VISIBLE);
@@ -193,11 +211,6 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
      */
     private void invalidateCustomViewAssociations() {
         view.findViewById(R.id.divider).setVisibility(View.GONE);
-        if (wrapInScrollView && !mMeasuredScrollView) {
-            // Wait until it's measured
-            ((MeasureCallbackScrollView) view.findViewById(R.id.contentScrollView)).setCallback(this);
-            return;
-        }
         if (canContentScroll() || canCustomViewScroll()) {
             view.findViewById(R.id.divider).setVisibility(View.VISIBLE);
             view.findViewById(R.id.divider).setBackgroundColor(DialogUtils.resolveColor(getContext(), R.attr.md_divider));
@@ -338,7 +351,8 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
         } else if (customView instanceof ScrollView) {
             return canScrollViewScroll((ViewGroup) customView);
         } else if (customView instanceof WebView) {
-            return ((WebView) customView).getContentHeight() > customView.getHeight();
+            return (((WebView) customView).getContentHeight() * ((WebView) customView).getScale())
+                    > customView.getHeight();
         }
 
         return false;
@@ -534,14 +548,6 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
                     sendMultichoiceCallback();
                 }
             } else if (autoDismiss) dismiss();
-        }
-    }
-
-    @Override
-    public void onMeasureScroll(ScrollView view) {
-        if (view.getMeasuredWidth() > 0) {
-            mMeasuredScrollView = true;
-            invalidateCustomViewAssociations();
         }
     }
 
