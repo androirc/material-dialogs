@@ -220,12 +220,11 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
      * was previous selected is checked.
      */
     private void invalidateSingleChoice(int newSelection) {
-        newSelection++;
-        final LinearLayout list = (LinearLayout) view.findViewById(R.id.mainFrame);
-        for (int i = 1; i < list.getChildCount(); i++) {
+        final LinearLayout list = (LinearLayout) view.findViewById(R.id.contentList);
+        for (int i = 0; i < list.getChildCount(); i++) {
             View v = list.getChildAt(i);
             @SuppressLint("WrongViewCast")
-            RadioButton rb = (RadioButton) v.findViewById(R.id.control);
+            RadioButton rb = (RadioButton) v.findViewById(R.id.radio_control);
             if (newSelection != i) {
                 rb.setChecked(false);
                 rb.clearFocus();
@@ -251,7 +250,7 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
             if (listCallbackSingle != null) {
                 il = li.inflate(R.layout.md_listitem_singlechoice, parent, false);
                 if (selectedIndex > -1) {
-                    RadioButton control = (RadioButton) il.findViewById(R.id.control);
+                    RadioButton control = (RadioButton) il.findViewById(R.id.radio_control);
                     if (selectedIndex == index) control.setChecked(true);
                 }
                 TextView tv = (TextView) il.findViewById(R.id.title);
@@ -262,7 +261,7 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
                 il = li.inflate(R.layout.md_listitem_multichoice, parent, false);
                 if (selectedIndices != null) {
                     if (Arrays.asList(selectedIndices).contains(index)) {
-                        CheckBox control = (CheckBox) il.findViewById(R.id.control);
+                        CheckBox control = (CheckBox) il.findViewById(R.id.cb_control);
                         control.setChecked(true);
                     }
                 }
@@ -457,13 +456,13 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
     }
 
     private void sendSingleChoiceCallback(View v) {
-        LinearLayout list = (LinearLayout) view.findViewById(R.id.mainFrame);
-        for (int i = 1; i < list.getChildCount(); i++) {
+        LinearLayout list = (LinearLayout) view.findViewById(R.id.contentList);
+        for (int i = 0; i < list.getChildCount(); i++) {
             View itemView = list.getChildAt(i);
-            @SuppressLint("WrongViewCast")
-            RadioButton rb = (RadioButton) itemView.findViewById(R.id.control);
+            RadioButton rb = (RadioButton) itemView.findViewById(R.id.radio_control);
             if (rb.isChecked()) {
-                listCallbackSingle.onSelection(this, v, i - 1, ((TextView) itemView.findViewById(R.id.title)).getText());
+                listCallbackSingle.onSelection(this, v, i,
+                        ((TextView) itemView.findViewById(R.id.title)).getText());
                 break;
             }
         }
@@ -472,13 +471,12 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener, 
     private void sendMultichoiceCallback() {
         List<Integer> selectedIndices = new ArrayList<Integer>();
         List<CharSequence> selectedTitles = new ArrayList<CharSequence>();
-        LinearLayout list = (LinearLayout) view.findViewById(R.id.mainFrame);
-        for (int i = 1; i < list.getChildCount(); i++) {
+        LinearLayout list = (LinearLayout) view.findViewById(R.id.contentList);
+        for (int i = 0; i < list.getChildCount(); i++) {
             View itemView = list.getChildAt(i);
-            @SuppressLint("WrongViewCast")
-            CheckBox rb = (CheckBox) itemView.findViewById(R.id.control);
+            CheckBox rb = (CheckBox) itemView.findViewById(R.id.cb_control);
             if (rb.isChecked()) {
-                selectedIndices.add(i - 1);
+                selectedIndices.add(i);
                 selectedTitles.add(((TextView) itemView.findViewById(R.id.title)).getText());
             }
         }
