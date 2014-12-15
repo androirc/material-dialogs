@@ -376,15 +376,11 @@ public class MaterialDialog extends DialogBase implements View.OnClickListener {
     private void checkIfStackingNeeded() {
         if (numberOfActionButtons() <= 1) return;
         final int maxWidth = calculateMaxButtonWidth();
-        Log.v("MD_Stacking", "Max button width: " + maxWidth);
         isStacked = false;
 
         if (this.positiveText != null) {
             final int positiveWidth = positiveButton.getWidth();
             isStacked = positiveWidth > maxWidth;
-            Log.v("MD_Stacking", "Positive button width: " + positiveWidth);
-        } else {
-            Log.v("MD_Stacking", "No positive button");
         }
 
         if (!isStacked && this.neutralText != null) {
