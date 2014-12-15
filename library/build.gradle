@@ -3,10 +3,9 @@ apply plugin: 'android-maven'
 
 android {
     compileSdkVersion 21
-    buildToolsVersion "21.1.1"
+    buildToolsVersion "21.1.2"
 
     defaultConfig {
-        applicationId "com.androirc.materialdialogs"
         minSdkVersion 9
         targetSdkVersion 21
         versionCode 1
